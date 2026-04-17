@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Financeiro</title>
+  <script>
+    tailwind = {
+      config: {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                500: "#10b981",
+                600: "#059669",
+                700: "#047857"
+              }
+            },
+            boxShadow: {
+              soft: "0 10px 30px -15px rgba(0, 0, 0, 0.25)"
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body class="h-full bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100">
+  <div class="min-h-screen">
+    <div class="flex min-h-screen">
+      <aside id="sidebar"
+        class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full border-r border-slate-200 bg-white/95 px-5 py-6 backdrop-blur transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900/95 lg:static lg:translate-x-0">
+        <div class="mb-8 flex items-center gap-3">
+          <div class="rounded-xl bg-brand-500/10 p-2 text-brand-600 dark:text-brand-500">
+            <i data-lucide="wallet" class="h-5 w-5"></i>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Sistema Financeiro</p>
+            <h1 class="text-lg font-semibold">Front-end Base</h1>
+          </div>
+        </div>
+
+        <nav class="space-y-2">
+          <button data-tab-target="login"
+            class="tab-button active-tab flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800">
+            <i data-lucide="shield-check" class="h-4 w-4"></i> Login
+          </button>
+        </nav>
+      </aside>
+
+      <div class="flex flex-1 flex-col">
+        <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 sm:px-6">
+          <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <button id="menuButton"
+                class="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 lg:hidden">
+                <i data-lucide="menu" class="h-5 w-5"></i>
+              </button>
+              <div>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Interface pronta para integração</p>
+                <h2 class="text-base font-semibold sm:text-lg">Autenticação primeiro</h2>
+              </div>
+            </div>
+            <button id="themeToggle"
+              class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
+              <i data-lucide="moon-star" class="h-4 w-4"></i>
+              Tema
+            </button>
+          </div>
+        </header>
+
+        <main class="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6">
+          <section id="login" class="tab-content">
+            <div class="grid min-h-[70vh] place-items-center py-6">
+              <div class="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-7 shadow-soft dark:border-slate-800 dark:bg-slate-900">
+                <div class="mb-5 flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                  <button type="button" id="showLogin" class="auth-tab flex-1 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white">Entrar</button>
+                  <button type="button" id="showRegister" class="auth-tab flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300">Cadastrar</button>
+                </div>
+                <div class="mb-5 flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 dark:border-slate-700">
+                  <span class="text-sm text-slate-600 dark:text-slate-300">Modo Dark / Light</span>
+                  <button id="themeSwitchInline" class="theme-switch relative h-7 w-14 rounded-full bg-slate-300 p-1 transition dark:bg-brand-600">
+                    <span class="theme-dot block h-5 w-5 rounded-full bg-white transition"></span>
+                  </button>
+                </div>
+
+                <form id="loginForm" class="auth-panel space-y-4">
+                  <h3 class="text-2xl font-semibold">Entrar na conta</h3>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Sem cadastro no banco, considere login inválido.</p>
+                  <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
+                    Status da autenticação será validado no seu backend.
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium">E-mail</label>
+                    <input type="email" placeholder="Digite seu e-mail"
+                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium">Senha</label>
+                    <input type="password" placeholder="Digite sua senha"
+                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
+                  </div>
+                  <button type="button"
+                    class="w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 focus:outline-none focus:ring-4 focus:ring-brand-500/40">
+                    Entrar
+                  </button>
+                </form>
+
+                <form id="registerForm" class="auth-panel hidden space-y-4">
+                  <h3 class="text-2xl font-semibold">Criar cadastro</h3>
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Preencha os dados para criar a conta.</p>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium">Nome completo</label>
+                    <input type="text" placeholder="Digite seu nome"
+                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium">E-mail</label>
+                    <input type="email" placeholder="Digite seu e-mail"
+                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
+                  </div>
+                  <div>
+                    <label class="mb-1 block text-sm font-medium">Senha</label>
+                    <input type="password" placeholder="Crie uma senha"
+                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
+                  </div>
+                  <button type="button"
+                    class="w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 focus:outline-none focus:ring-4 focus:ring-brand-500/40">
+                    Cadastrar
+                  </button>
+                </form>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

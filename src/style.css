@@ -1,0 +1,43 @@
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+body {
+  font-family: Inter, "Segoe UI", Roboto, sans-serif;
+}
+
+.active-tab {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.04));
+  color: #047857;
+}
+
+.dark .active-tab {
+  color: #6ee7b7;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.22), rgba(16, 185, 129, 0.06));
+}
+
+.theme-switch .theme-dot {
+  transform: translateX(0);
+}
+
+.dark .theme-switch .theme-dot {
+  transform: translateX(1.75rem);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
