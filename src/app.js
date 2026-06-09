@@ -775,53 +775,55 @@ function renderListaCategorias(categorias) {
   }
 }
 
-// ─── Edição de lançamentos ───────────────────────────────────────────────────────
+// ─── Modal de edição de lançamentos ─────────────────────────────────────────────
 
-function iniciarEdicao(id, tipo, dados) {
+async function iniciarEdicao(id, tipo, dados) {
   editingId = id;
   editingTipo = tipo;
 
-  const tipoDesp = document.getElementById("lTipoDesp");
-  const tipoRec = document.getElementById("lTipoRec");
-  if (tipoDesp && tipoRec) {
-    tipoDesp.checked = tipo === "despesa";
-    tipoRec.checked = tipo === "receita";
-    tipoDesp.dispatchEvent(new Event("change"));
+  const modal = document.getElementById("editModal");
+  const title = document.getElementById("editModalTitle");
+  const catLabel = document.getElementById("eLCatLabel");
+  if (title) title.textContent = tipo === "despesa" ? "Editar despesa" : "Editar receita";
+  if (catLabel) catLabel.textContent = "Categoria";
+
+  document.getElementById("eLData").value = dados.data;
+  document.getElementById("eLValor").value = dados.valor;
+  document.getElementById("eLDesc").value = dados.descricao || "";
+
+  let contas = [], categorias = [];
+  try {
+    [contas, categorias] = await Promise.all([api("/api/contas"), api("/api/categorias")]);
+  } catch { /* usa listas vazias */ }
+
+  const selCat = document.getElementById("eLCat");
+  const selConta = document.getElementById("eLConta");
+
+  selCat.innerHTML = '<option value="">Selecione…</option>';
+  for (const c of categorias) {
+    const o = document.createElement("option");
+    o.value = c.nome; o.textContent = c.nome;
+    selCat.appendChild(o);
   }
+  selCat.value = tipo === "despesa" ? dados.tipo : dados.categoria;
 
-  const lData = document.getElementById("lData");
-  const lValor = document.getElementById("lValor");
-  const lDesc = document.getElementById("lDesc");
-  const lCat = document.getElementById("lCat");
-  const lConta = document.getElementById("lConta");
+  selConta.innerHTML = '<option value="">Selecione…</option>';
+  for (const c of contas) {
+    const o = document.createElement("option");
+    o.value = c.nome; o.textContent = c.nome;
+    selConta.appendChild(o);
+  }
+  selConta.value = dados.conta;
 
-  if (lData) lData.value = dados.data;
-  if (lValor) lValor.value = dados.valor;
-  if (lDesc) lDesc.value = dados.descricao || "";
-  if (lCat) lCat.value = tipo === "despesa" ? dados.tipo : dados.categoria;
-  if (lConta) lConta.value = dados.conta;
-
-  const lSubmit = document.getElementById("lSubmit");
-  if (lSubmit) lSubmit.textContent = "Salvar alterações";
-
-  const cancelBtn = document.getElementById("lCancelarEdicao");
-  if (cancelBtn) cancelBtn.classList.remove("hidden");
-
-  openTab("lancamentos");
-  formLancamento?.scrollIntoView({ behavior: "smooth", block: "start" });
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  refreshIcons();
 }
 
-function cancelarEdicao() {
+function fecharEditModal() {
   editingId = null;
   editingTipo = null;
-  formLancamento?.reset();
-  const lData = document.getElementById("lData");
-  if (lData) lData.value = new Date().toISOString().slice(0, 10);
-  const lSubmit = document.getElementById("lSubmit");
-  if (lSubmit) lSubmit.textContent = "Salvar lançamento";
-  const cancelBtn = document.getElementById("lCancelarEdicao");
-  if (cancelBtn) cancelBtn.classList.add("hidden");
-  syncContaLabelLancamento();
+  document.getElementById("editModal")?.classList.replace("flex", "hidden");
 }
 
 // ─── Event Listeners ─────────────────────────────────────────────────────────────
@@ -924,27 +926,17 @@ formLancamento?.addEventListener("submit", async (e) => {
   const btn = document.getElementById("lSubmit");
   btn.disabled = true;
   try {
-    const isEditing = editingId !== null;
     if (tipoMov === "despesa") {
-      const body = JSON.stringify({ data, valor: Number(valor), descricao, tipo: cat, conta });
-      if (isEditing) {
-        await api(`/api/despesas/${editingId}`, { method: "PUT", body });
-        showMainAlert("Despesa atualizada.", false);
-      } else {
-        await api("/api/despesas", { method: "POST", body });
-        showMainAlert("Despesa salva.", false);
-      }
+      await api("/api/despesas", { method: "POST", body: JSON.stringify({ data, valor: Number(valor), descricao, tipo: cat, conta }) });
+      showMainAlert("Despesa salva.", false);
     } else {
-      const body = JSON.stringify({ data, valor: Number(valor), descricao, categoria: cat, conta });
-      if (isEditing) {
-        await api(`/api/receitas/${editingId}`, { method: "PUT", body });
-        showMainAlert("Receita atualizada.", false);
-      } else {
-        await api("/api/receitas", { method: "POST", body });
-        showMainAlert("Receita salva.", false);
-      }
+      await api("/api/receitas", { method: "POST", body: JSON.stringify({ data, valor: Number(valor), descricao, categoria: cat, conta }) });
+      showMainAlert("Receita salva.", false);
     }
-    cancelarEdicao();
+    formLancamento.reset();
+    const ld = document.getElementById("lData");
+    if (ld) ld.value = new Date().toISOString().slice(0, 10);
+    syncContaLabelLancamento();
     await carregarMovimentosMes();
     await preencherSelectsCatalogo();
     carregarDashboard();
@@ -993,7 +985,73 @@ document.querySelectorAll('input[name="lTipo"]').forEach((inp) => {
   inp.addEventListener("change", syncContaLabelLancamento);
 });
 
-document.getElementById("lCancelarEdicao")?.addEventListener("click", cancelarEdicao);
+// ─── Modal de edição — listeners ────────────────────────────────────────────────
+
+document.getElementById("editModalClose")?.addEventListener("click", fecharEditModal);
+document.getElementById("editModalBackdrop")?.addEventListener("click", fecharEditModal);
+
+document.getElementById("editForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById("eLSubmit");
+  btn.disabled = true;
+  const data  = document.getElementById("eLData").value;
+  const valor = document.getElementById("eLValor").value;
+  const descricao = document.getElementById("eLDesc").value?.trim() || "";
+  const cat   = document.getElementById("eLCat").value;
+  const conta = document.getElementById("eLConta").value;
+  try {
+    if (editingTipo === "despesa") {
+      await api(`/api/despesas/${editingId}`, { method: "PUT", body: JSON.stringify({ data, valor: Number(valor), descricao, tipo: cat, conta }) });
+      showMainAlert("Despesa atualizada.", false);
+    } else {
+      await api(`/api/receitas/${editingId}`, { method: "PUT", body: JSON.stringify({ data, valor: Number(valor), descricao, categoria: cat, conta }) });
+      showMainAlert("Receita atualizada.", false);
+    }
+    fecharEditModal();
+    await carregarMovimentosMes();
+    carregarDashboard();
+  } catch (err) {
+    showMainAlert(err.message || "Erro ao salvar.", true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// ─── Excluir conta — listeners ───────────────────────────────────────────────────
+
+document.getElementById("deleteAccountOpenBtn")?.addEventListener("click", () => {
+  const modal = document.getElementById("deleteAccountModal");
+  document.getElementById("deleteAccountConfirm").value = "";
+  document.getElementById("deleteAccountBtn").disabled = true;
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  refreshIcons();
+});
+
+function fecharDeleteModal() {
+  document.getElementById("deleteAccountModal")?.classList.replace("flex", "hidden");
+}
+
+document.getElementById("deleteAccountClose")?.addEventListener("click", fecharDeleteModal);
+document.getElementById("deleteAccountBackdrop")?.addEventListener("click", fecharDeleteModal);
+
+document.getElementById("deleteAccountConfirm")?.addEventListener("input", (e) => {
+  document.getElementById("deleteAccountBtn").disabled = e.target.value !== "EXCLUIR";
+});
+
+document.getElementById("deleteAccountBtn")?.addEventListener("click", async () => {
+  try {
+    await api("/api/auth/me", { method: "DELETE" });
+    clearSession();
+    destroyCharts();
+    fecharDeleteModal();
+    showAuth();
+    setAuthView("login");
+    showAuthAlert("Conta excluída com sucesso.", false);
+  } catch (err) {
+    showMainAlert(err.message || "Erro ao excluir conta.", true);
+  }
+});
 
 // ─── Validação de senha forte ────────────────────────────────────────────────────
 

@@ -255,6 +255,21 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
   res.json(user);
 });
 
+app.delete("/api/auth/me", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    await query(`DELETE FROM despesas   WHERE "userId" = $1`, [userId]);
+    await query(`DELETE FROM receitas   WHERE "userId" = $1`, [userId]);
+    await query(`DELETE FROM contas     WHERE "userId" = $1`, [userId]);
+    await query(`DELETE FROM categorias WHERE "userId" = $1`, [userId]);
+    await query(`DELETE FROM users      WHERE id = $1`,       [userId]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("delete /auth/me", e);
+    res.status(500).json({ erro: "Não foi possível excluir a conta." });
+  }
+});
+
 app.put("/api/auth/me", authMiddleware, async (req, res) => {
   try {
     const { name, currentPassword, newPassword } = req.body || {};

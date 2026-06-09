@@ -82,7 +82,7 @@
               <span class="feature-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-brand-600 dark:text-brand-400">
                 <i data-lucide="shield-check" class="h-5 w-5"></i>
               </span>
-              <span class="text-sm font-medium text-slate-600 dark:text-slate-300">Autenticação segura com JWT e senha criptografada</span>
+              <span class="text-sm font-medium text-slate-600 dark:text-slate-300">Autenticação segura com senha criptografada</span>
             </li>
             <li class="flex items-center gap-4">
               <span class="feature-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-brand-600 dark:text-brand-400">
@@ -238,8 +238,12 @@
           </button>
         </nav>
 
-        <!-- Logout -->
-        <div class="mt-auto border-t border-slate-100 pt-5 dark:border-slate-800">
+        <!-- Rodapé sidebar -->
+        <div class="mt-auto space-y-1 border-t border-slate-100 pt-5 dark:border-slate-800">
+          <button type="button" id="deleteAccountOpenBtn"
+            class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-500 dark:text-slate-500 dark:hover:bg-rose-950/30 dark:hover:text-rose-400">
+            <i data-lucide="user-x" class="h-4 w-4"></i> Excluir conta
+          </button>
           <button type="button" id="logoutBtn"
             class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-rose-500 transition-all hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">
             <i data-lucide="log-out" class="h-4 w-4"></i> Sair
@@ -557,6 +561,84 @@
             </div>
           </section>
         </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ MODAL EDIÇÃO ═══ -->
+  <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="editModalBackdrop" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    <div class="relative w-full max-w-lg rounded-3xl border border-slate-200/80 bg-white p-8 shadow-2xl dark:border-slate-700/60 dark:bg-slate-900">
+      <h3 id="editModalTitle" class="mb-6 text-lg font-extrabold text-slate-900 dark:text-white">Editar despesa</h3>
+      <form id="editForm" class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Data</label>
+          <input type="date" id="eLData" required
+            class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Valor (R$)</label>
+          <input type="number" id="eLValor" step="0.01" min="0.01" required
+            class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Descrição</label>
+          <input type="text" id="eLDesc" maxlength="200" placeholder="Opcional"
+            class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" id="eLCatLabel">Categoria</label>
+          <select id="eLCat" required
+            class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+            <option value="">Selecione…</option>
+          </select>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Conta</label>
+          <select id="eLConta" required
+            class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+            <option value="">Selecione…</option>
+          </select>
+        </div>
+        <div class="sm:col-span-2 flex flex-wrap gap-3">
+          <button type="submit" id="eLSubmit"
+            class="btn-primary inline-flex items-center justify-center gap-2 rounded-2xl px-8 py-3.5 text-sm font-bold text-white">
+            <i data-lucide="check" class="h-4 w-4"></i> Salvar alterações
+          </button>
+          <button type="button" id="editModalClose"
+            class="rounded-2xl border border-slate-200 px-6 py-3.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════ MODAL EXCLUIR CONTA ═══ -->
+  <div id="deleteAccountModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="deleteAccountBackdrop" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    <div class="relative w-full max-w-md rounded-3xl border border-rose-200/60 bg-white p-8 shadow-2xl dark:border-rose-900/30 dark:bg-slate-900">
+      <div class="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+        <i data-lucide="triangle-alert" class="h-6 w-6"></i>
+      </div>
+      <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Excluir conta permanentemente</h3>
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        Esta ação é <strong class="text-slate-700 dark:text-slate-200">irreversível</strong>. Todos os seus lançamentos, contas e categorias serão apagados para sempre.
+      </p>
+      <p class="mt-4 text-sm font-semibold text-slate-600 dark:text-slate-300">
+        Digite <code class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-rose-600 dark:bg-slate-800 dark:text-rose-400">EXCLUIR</code> para confirmar:
+      </p>
+      <input type="text" id="deleteAccountConfirm" autocomplete="off" placeholder="EXCLUIR"
+        class="mt-2 input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button type="button" id="deleteAccountBtn" disabled
+          class="inline-flex items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40">
+          <i data-lucide="trash-2" class="h-4 w-4"></i> Excluir permanentemente
+        </button>
+        <button type="button" id="deleteAccountClose"
+          class="rounded-2xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+          Cancelar
+        </button>
       </div>
     </div>
   </div>
