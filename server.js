@@ -151,8 +151,36 @@ async function ensureUserCatalog(userId) {
 // ─── App ─────────────────────────────────────────────────────────────────────────
 
 const app = express();
-app.use(cors());
+
+const corsOrigin = process.env.CORS_ORIGIN || true;
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
+
+// Rate limiting simples em memória (janela deslizante de 15 min, máx 20 req por IP)
+const authAttempts = new Map();
+function authLimiter(req, res, next) {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  const max = 20;
+  const entry = authAttempts.get(ip) || { count: 0, resetAt: now + windowMs };
+  if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + windowMs; }
+  entry.count += 1;
+  authAttempts.set(ip, entry);
+  if (entry.count > max) {
+    const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+    res.set("Retry-After", String(retryAfter));
+    return res.status(429).json({ erro: "Muitas tentativas. Tente novamente em 15 minutos." });
+  }
+  next();
+}
+// Limpa entradas expiradas a cada 30 minutos para não vazar memória
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of authAttempts) {
+    if (now > entry.resetAt) authAttempts.delete(ip);
+  }
+}, 30 * 60 * 1000).unref();
 
 function authMiddleware(req, res, next) {
   const header = req.headers.authorization || "";
@@ -171,7 +199,7 @@ function authMiddleware(req, res, next) {
 
 app.get("/api/health", (_, res) => res.json({ ok: true, api: "financas", versao: 4 }));
 
-app.post("/api/auth/register", async (req, res) => {
+app.post("/api/auth/register", authLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body || {};
     if (!name || !email || !password)
@@ -185,7 +213,7 @@ app.post("/api/auth/register", async (req, res) => {
     if (existe) return res.status(409).json({ erro: "E-mail já cadastrado." });
 
     const id = randomUUID();
-    const passwordHash = bcrypt.hashSync(password, 10);
+    const passwordHash = await bcrypt.hash(password, 10);
     await query(
       `INSERT INTO users (id, name, email, "passwordHash", "criadoEm") VALUES ($1, $2, $3, $4, $5)`,
       [id, String(name).trim(), emailNorm, passwordHash, new Date().toISOString()]
@@ -200,7 +228,7 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
-app.post("/api/auth/login", async (req, res) => {
+app.post("/api/auth/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body || {};
     if (!email || !password)
@@ -208,7 +236,7 @@ app.post("/api/auth/login", async (req, res) => {
 
     const emailNorm = String(email).trim().toLowerCase();
     const user = await queryOne("SELECT * FROM users WHERE email = $1", [emailNorm]);
-    if (!user || !bcrypt.compareSync(password, user.passwordHash))
+    if (!user || !(await bcrypt.compare(password, user.passwordHash)))
       return res.status(401).json({ erro: "E-mail ou senha incorretos." });
 
     await ensureUserCatalog(user.id);
@@ -225,6 +253,41 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
   if (!user) return res.status(401).json({ erro: "Usuário não encontrado." });
   await ensureUserCatalog(user.id);
   res.json(user);
+});
+
+app.put("/api/auth/me", authMiddleware, async (req, res) => {
+  try {
+    const { name, currentPassword, newPassword } = req.body || {};
+    const user = await queryOne("SELECT * FROM users WHERE id = $1", [req.user.id]);
+    if (!user) return res.status(404).json({ erro: "Usuário não encontrado." });
+
+    const sets = [];
+    const vals = [];
+
+    if (name) {
+      sets.push(`name = $${sets.length + 1}`);
+      vals.push(String(name).trim());
+    }
+
+    if (newPassword) {
+      if (!currentPassword) return res.status(400).json({ erro: "Informe a senha atual." });
+      if (!(await bcrypt.compare(currentPassword, user.passwordHash)))
+        return res.status(401).json({ erro: "Senha atual incorreta." });
+      const senhaErro = validarSenhaForte(newPassword);
+      if (senhaErro) return res.status(400).json({ erro: senhaErro });
+      sets.push(`"passwordHash" = $${sets.length + 1}`);
+      vals.push(await bcrypt.hash(newPassword, 10));
+    }
+
+    if (sets.length === 0) return res.status(400).json({ erro: "Nada para atualizar." });
+
+    vals.push(req.user.id);
+    await query(`UPDATE users SET ${sets.join(", ")} WHERE id = $${vals.length}`, vals);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("put /auth/me", e);
+    res.status(500).json({ erro: "Não foi possível atualizar o perfil." });
+  }
 });
 
 // ─── Contas ───────────────────────────────────────────────────────────────────────
@@ -248,6 +311,21 @@ app.post("/api/contas", authMiddleware, async (req, res) => {
       [id, req.user.id, nome, cor, new Date().toISOString()]
     );
     res.status(201).json({ id, userId: req.user.id, nome, cor });
+  } catch (e) {
+    if (e.code === "23505") return res.status(409).json({ erro: "Já existe uma conta com esse nome." });
+    throw e;
+  }
+});
+
+app.put("/api/contas/:id", authMiddleware, async (req, res) => {
+  const conta = await queryOne(`SELECT 1 FROM contas WHERE id = $1 AND "userId" = $2`, [req.params.id, req.user.id]);
+  if (!conta) return res.status(404).json({ erro: "Conta não encontrada." });
+  const nome = String(req.body?.nome || "").trim();
+  if (!nome) return res.status(400).json({ erro: "Informe o nome da conta." });
+  const cor = normalizeCor(req.body?.cor, "#6366f1");
+  try {
+    await query(`UPDATE contas SET nome = $1, cor = $2 WHERE id = $3`, [nome, cor, req.params.id]);
+    res.json({ id: req.params.id, nome, cor });
   } catch (e) {
     if (e.code === "23505") return res.status(409).json({ erro: "Já existe uma conta com esse nome." });
     throw e;
@@ -284,6 +362,21 @@ app.post("/api/categorias", authMiddleware, async (req, res) => {
       [id, req.user.id, nome, cor, new Date().toISOString()]
     );
     res.status(201).json({ id, userId: req.user.id, nome, cor });
+  } catch (e) {
+    if (e.code === "23505") return res.status(409).json({ erro: "Já existe uma categoria com esse nome." });
+    throw e;
+  }
+});
+
+app.put("/api/categorias/:id", authMiddleware, async (req, res) => {
+  const cat = await queryOne(`SELECT 1 FROM categorias WHERE id = $1 AND "userId" = $2`, [req.params.id, req.user.id]);
+  if (!cat) return res.status(404).json({ erro: "Categoria não encontrada." });
+  const nome = String(req.body?.nome || "").trim();
+  if (!nome) return res.status(400).json({ erro: "Informe o nome da categoria." });
+  const cor = normalizeCor(req.body?.cor, "#a855f7");
+  try {
+    await query(`UPDATE categorias SET nome = $1, cor = $2 WHERE id = $3`, [nome, cor, req.params.id]);
+    res.json({ id: req.params.id, nome, cor });
   } catch (e) {
     if (e.code === "23505") return res.status(409).json({ erro: "Já existe uma categoria com esse nome." });
     throw e;
@@ -341,6 +434,33 @@ app.post("/api/despesas", authMiddleware, async (req, res) => {
   res.status(201).json({ id, userId: req.user.id, data: dataStr, valor: Math.round(v * 100) / 100, descricao: descricao?.trim() || "", tipo: tipoStr, conta: contaStr, criadoEm });
 });
 
+app.put("/api/despesas/:id", authMiddleware, async (req, res) => {
+  const exists = await queryOne(`SELECT 1 FROM despesas WHERE id = $1 AND "userId" = $2`, [req.params.id, req.user.id]);
+  if (!exists) return res.status(404).json({ erro: "Despesa não encontrada." });
+
+  const { data, valor, descricao, tipo, conta } = req.body || {};
+  if (!data || valor == null || !tipo || !conta)
+    return res.status(400).json({ erro: "Campos obrigatórios: data, valor, tipo, conta." });
+
+  const dataStr = parseDataStr(data);
+  if (!dataStr) return res.status(400).json({ erro: "Data inválida." });
+  const v = Number(valor);
+  if (Number.isNaN(v) || v <= 0) return res.status(400).json({ erro: "Valor deve ser maior que zero." });
+
+  const tipoStr = String(tipo).trim();
+  const contaStr = String(conta).trim();
+  const catValida = await queryOne(`SELECT 1 FROM categorias WHERE "userId" = $1 AND nome = $2`, [req.user.id, tipoStr]);
+  if (!catValida) return res.status(400).json({ erro: "Categoria inválida. Cadastre-a em Organização." });
+  const contaValida = await queryOne(`SELECT 1 FROM contas WHERE "userId" = $1 AND nome = $2`, [req.user.id, contaStr]);
+  if (!contaValida) return res.status(400).json({ erro: "Conta inválida. Cadastre-a em Organização." });
+
+  await query(
+    `UPDATE despesas SET data = $1, valor = $2, descricao = $3, tipo = $4, conta = $5 WHERE id = $6`,
+    [dataStr, Math.round(v * 100) / 100, descricao?.trim() || "", tipoStr, contaStr, req.params.id]
+  );
+  res.json({ ok: true });
+});
+
 app.delete("/api/despesas/:id", authMiddleware, async (req, res) => {
   const r = await query(`DELETE FROM despesas WHERE id = $1 AND "userId" = $2 RETURNING id`, [req.params.id, req.user.id]);
   if (!r.length) return res.status(404).json({ erro: "Despesa não encontrada." });
@@ -387,6 +507,33 @@ app.post("/api/receitas", authMiddleware, async (req, res) => {
     [id, req.user.id, dataStr, Math.round(v * 100) / 100, descricao?.trim() || "", catStr, contaStr, criadoEm]
   );
   res.status(201).json({ id, userId: req.user.id, data: dataStr, valor: Math.round(v * 100) / 100, descricao: descricao?.trim() || "", categoria: catStr, conta: contaStr, criadoEm });
+});
+
+app.put("/api/receitas/:id", authMiddleware, async (req, res) => {
+  const exists = await queryOne(`SELECT 1 FROM receitas WHERE id = $1 AND "userId" = $2`, [req.params.id, req.user.id]);
+  if (!exists) return res.status(404).json({ erro: "Receita não encontrada." });
+
+  const { data, valor, descricao, categoria, conta } = req.body || {};
+  if (!data || valor == null || !categoria || !conta)
+    return res.status(400).json({ erro: "Campos obrigatórios: data, valor, categoria, conta." });
+
+  const dataStr = parseDataStr(data);
+  if (!dataStr) return res.status(400).json({ erro: "Data inválida." });
+  const v = Number(valor);
+  if (Number.isNaN(v) || v <= 0) return res.status(400).json({ erro: "Valor deve ser maior que zero." });
+
+  const catStr = String(categoria).trim();
+  const contaStr = String(conta).trim();
+  const catValida = await queryOne(`SELECT 1 FROM categorias WHERE "userId" = $1 AND nome = $2`, [req.user.id, catStr]);
+  if (!catValida) return res.status(400).json({ erro: "Categoria inválida. Cadastre-a em Organização." });
+  const contaValida = await queryOne(`SELECT 1 FROM contas WHERE "userId" = $1 AND nome = $2`, [req.user.id, contaStr]);
+  if (!contaValida) return res.status(400).json({ erro: "Conta inválida. Cadastre-a em Organização." });
+
+  await query(
+    `UPDATE receitas SET data = $1, valor = $2, descricao = $3, categoria = $4, conta = $5 WHERE id = $6`,
+    [dataStr, Math.round(v * 100) / 100, descricao?.trim() || "", catStr, contaStr, req.params.id]
+  );
+  res.json({ ok: true });
 });
 
 app.delete("/api/receitas/:id", authMiddleware, async (req, res) => {

@@ -71,6 +71,19 @@ const listaCategorias = document.getElementById("listaCategorias");
 
 let chartCategoriasInst = null;
 let chartLinhaInst = null;
+let editingId = null;
+let editingTipo = null;
+
+// ─── Segurança ───────────────────────────────────────────────────────────────────
+
+function esc(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 // ─── Sessão ──────────────────────────────────────────────────────────────────────
 
@@ -434,18 +447,27 @@ function renderDespesas(despesas) {
     const tr = document.createElement("tr");
     tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40";
     tr.innerHTML = `
-      <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-700 dark:text-slate-200">${d.data}</td>
-      <td class="max-w-[200px] truncate px-4 py-3 text-slate-600 dark:text-slate-300">${d.descricao || "—"}</td>
-      <td class="px-4 py-3"><span class="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">${d.tipo}</span></td>
-      <td class="px-4 py-3 text-slate-600 dark:text-slate-300">${d.conta}</td>
+      <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-700 dark:text-slate-200">${esc(d.data)}</td>
+      <td class="max-w-[200px] truncate px-4 py-3 text-slate-600 dark:text-slate-300">${esc(d.descricao) || "—"}</td>
+      <td class="px-4 py-3"><span class="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">${esc(d.tipo)}</span></td>
+      <td class="px-4 py-3 text-slate-600 dark:text-slate-300">${esc(d.conta)}</td>
       <td class="whitespace-nowrap px-4 py-3 text-right font-semibold text-slate-900 dark:text-white">${formatMoney(d.valor)}</td>
-      <td class="px-2 py-3">
-        <button type="button" data-del-desp="${d.id}" class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" title="Excluir">
+      <td class="px-2 py-3 flex gap-1">
+        <button type="button" data-edit-desp="${esc(d.id)}" data-edit-json="${esc(JSON.stringify(d))}" class="rounded-lg p-2 text-slate-400 transition hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-950/30" title="Editar">
+          <i data-lucide="pencil" class="h-4 w-4"></i>
+        </button>
+        <button type="button" data-del-desp="${esc(d.id)}" class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" title="Excluir">
           <i data-lucide="trash-2" class="h-4 w-4"></i>
         </button>
       </td>`;
     tabelaDespesas.appendChild(tr);
   }
+  tabelaDespesas.querySelectorAll("[data-edit-desp]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const d = JSON.parse(btn.getAttribute("data-edit-json"));
+      iniciarEdicao(d.id, "despesa", d);
+    });
+  });
   tabelaDespesas.querySelectorAll("[data-del-desp]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       if (!confirm("Excluir esta despesa?")) return;
@@ -473,18 +495,27 @@ function renderReceitas(receitas) {
     const tr = document.createElement("tr");
     tr.className = "hover:bg-slate-50/80 dark:hover:bg-slate-800/40";
     tr.innerHTML = `
-      <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-700 dark:text-slate-200">${r.data}</td>
-      <td class="max-w-[200px] truncate px-4 py-3 text-slate-600 dark:text-slate-300">${r.descricao || "—"}</td>
-      <td class="px-4 py-3"><span class="rounded-lg bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">${r.categoria}</span></td>
-      <td class="px-4 py-3 text-slate-600 dark:text-slate-300">${r.conta}</td>
+      <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-700 dark:text-slate-200">${esc(r.data)}</td>
+      <td class="max-w-[200px] truncate px-4 py-3 text-slate-600 dark:text-slate-300">${esc(r.descricao) || "—"}</td>
+      <td class="px-4 py-3"><span class="rounded-lg bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">${esc(r.categoria)}</span></td>
+      <td class="px-4 py-3 text-slate-600 dark:text-slate-300">${esc(r.conta)}</td>
       <td class="whitespace-nowrap px-4 py-3 text-right font-semibold text-emerald-700 dark:text-emerald-400">${formatMoney(r.valor)}</td>
-      <td class="px-2 py-3">
-        <button type="button" data-del-rec="${r.id}" class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" title="Excluir">
+      <td class="px-2 py-3 flex gap-1">
+        <button type="button" data-edit-rec="${esc(r.id)}" data-edit-json="${esc(JSON.stringify(r))}" class="rounded-lg p-2 text-slate-400 transition hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-950/30" title="Editar">
+          <i data-lucide="pencil" class="h-4 w-4"></i>
+        </button>
+        <button type="button" data-del-rec="${esc(r.id)}" class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/30" title="Excluir">
           <i data-lucide="trash-2" class="h-4 w-4"></i>
         </button>
       </td>`;
     tabelaReceitas.appendChild(tr);
   }
+  tabelaReceitas.querySelectorAll("[data-edit-rec]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const r = JSON.parse(btn.getAttribute("data-edit-json"));
+      iniciarEdicao(r.id, "receita", r);
+    });
+  });
   tabelaReceitas.querySelectorAll("[data-del-rec]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       if (!confirm("Excluir esta receita?")) return;
@@ -656,16 +687,21 @@ async function carregarOrganizacao() {
   refreshIcons();
 }
 
-function renderListaItem({ id, nome, cor }, delAttr, onDelete) {
+function renderListaItem({ id, nome, cor }, delAttr, editAttr, onDelete, onEdit) {
   const li = document.createElement("li");
   li.className = "flex items-center justify-between gap-2 py-3 text-sm";
+  const safeCor = /^#[0-9a-fA-F]{3,6}$/.test(cor) ? cor : "#94a3b8";
   li.innerHTML = `
     <div class="flex min-w-0 flex-1 items-center gap-2">
-      <span class="h-3.5 w-3.5 shrink-0 rounded-full ring-1 ring-slate-300 dark:ring-slate-600" style="background-color:${cor || "#94a3b8"}"></span>
-      <span class="truncate font-medium text-slate-800 dark:text-slate-200">${nome}</span>
+      <span class="h-3.5 w-3.5 shrink-0 rounded-full ring-1 ring-slate-300 dark:ring-slate-600" style="background-color:${safeCor}"></span>
+      <span class="truncate font-medium text-slate-800 dark:text-slate-200">${esc(nome)}</span>
     </div>
-    <button type="button" ${delAttr}="${id}" class="shrink-0 rounded-lg px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">Remover</button>`;
+    <div class="flex shrink-0 gap-1">
+      <button type="button" ${editAttr}="${esc(id)}" class="rounded-lg px-2 py-1 text-xs text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-950/30">Renomear</button>
+      <button type="button" ${delAttr}="${esc(id)}" class="rounded-lg px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">Remover</button>
+    </div>`;
   li.querySelector(`[${delAttr}]`).addEventListener("click", onDelete);
+  li.querySelector(`[${editAttr}]`).addEventListener("click", onEdit);
   return li;
 }
 
@@ -673,17 +709,34 @@ function renderListaContas(contas) {
   if (!listaContas) return;
   listaContas.innerHTML = "";
   for (const c of contas) {
-    listaContas.appendChild(renderListaItem(c, "data-del-conta", async () => {
-      if (!confirm("Remover esta conta?")) return;
-      try {
-        await api(`/api/contas/${c.id}`, { method: "DELETE" });
-        await carregarOrganizacao();
-        await preencherSelectsCatalogo();
-        showMainAlert("Conta removida.", false);
-      } catch (err) {
-        showMainAlert(err.message, true);
+    listaContas.appendChild(renderListaItem(
+      c,
+      "data-del-conta",
+      "data-edit-conta",
+      async () => {
+        if (!confirm("Remover esta conta?")) return;
+        try {
+          await api(`/api/contas/${c.id}`, { method: "DELETE" });
+          await carregarOrganizacao();
+          await preencherSelectsCatalogo();
+          showMainAlert("Conta removida.", false);
+        } catch (err) {
+          showMainAlert(err.message, true);
+        }
+      },
+      async () => {
+        const novoNome = prompt("Novo nome para a conta:", c.nome);
+        if (!novoNome || novoNome.trim() === c.nome) return;
+        try {
+          await api(`/api/contas/${c.id}`, { method: "PUT", body: JSON.stringify({ nome: novoNome.trim(), cor: c.cor }) });
+          await carregarOrganizacao();
+          await preencherSelectsCatalogo();
+          showMainAlert("Conta renomeada.", false);
+        } catch (err) {
+          showMainAlert(err.message, true);
+        }
       }
-    }));
+    ));
   }
 }
 
@@ -691,18 +744,84 @@ function renderListaCategorias(categorias) {
   if (!listaCategorias) return;
   listaCategorias.innerHTML = "";
   for (const c of categorias) {
-    listaCategorias.appendChild(renderListaItem(c, "data-del-cat", async () => {
-      if (!confirm("Remover esta categoria?")) return;
-      try {
-        await api(`/api/categorias/${c.id}`, { method: "DELETE" });
-        await carregarOrganizacao();
-        await preencherSelectsCatalogo();
-        showMainAlert("Categoria removida.", false);
-      } catch (err) {
-        showMainAlert(err.message, true);
+    listaCategorias.appendChild(renderListaItem(
+      c,
+      "data-del-cat",
+      "data-edit-cat",
+      async () => {
+        if (!confirm("Remover esta categoria?")) return;
+        try {
+          await api(`/api/categorias/${c.id}`, { method: "DELETE" });
+          await carregarOrganizacao();
+          await preencherSelectsCatalogo();
+          showMainAlert("Categoria removida.", false);
+        } catch (err) {
+          showMainAlert(err.message, true);
+        }
+      },
+      async () => {
+        const novoNome = prompt("Novo nome para a categoria:", c.nome);
+        if (!novoNome || novoNome.trim() === c.nome) return;
+        try {
+          await api(`/api/categorias/${c.id}`, { method: "PUT", body: JSON.stringify({ nome: novoNome.trim(), cor: c.cor }) });
+          await carregarOrganizacao();
+          await preencherSelectsCatalogo();
+          showMainAlert("Categoria renomeada.", false);
+        } catch (err) {
+          showMainAlert(err.message, true);
+        }
       }
-    }));
+    ));
   }
+}
+
+// ─── Edição de lançamentos ───────────────────────────────────────────────────────
+
+function iniciarEdicao(id, tipo, dados) {
+  editingId = id;
+  editingTipo = tipo;
+
+  const tipoDesp = document.getElementById("lTipoDesp");
+  const tipoRec = document.getElementById("lTipoRec");
+  if (tipoDesp && tipoRec) {
+    tipoDesp.checked = tipo === "despesa";
+    tipoRec.checked = tipo === "receita";
+    tipoDesp.dispatchEvent(new Event("change"));
+  }
+
+  const lData = document.getElementById("lData");
+  const lValor = document.getElementById("lValor");
+  const lDesc = document.getElementById("lDesc");
+  const lCat = document.getElementById("lCat");
+  const lConta = document.getElementById("lConta");
+
+  if (lData) lData.value = dados.data;
+  if (lValor) lValor.value = dados.valor;
+  if (lDesc) lDesc.value = dados.descricao || "";
+  if (lCat) lCat.value = tipo === "despesa" ? dados.tipo : dados.categoria;
+  if (lConta) lConta.value = dados.conta;
+
+  const lSubmit = document.getElementById("lSubmit");
+  if (lSubmit) lSubmit.textContent = "Salvar alterações";
+
+  const cancelBtn = document.getElementById("lCancelarEdicao");
+  if (cancelBtn) cancelBtn.classList.remove("hidden");
+
+  openTab("lancamentos");
+  formLancamento?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function cancelarEdicao() {
+  editingId = null;
+  editingTipo = null;
+  formLancamento?.reset();
+  const lData = document.getElementById("lData");
+  if (lData) lData.value = new Date().toISOString().slice(0, 10);
+  const lSubmit = document.getElementById("lSubmit");
+  if (lSubmit) lSubmit.textContent = "Salvar lançamento";
+  const cancelBtn = document.getElementById("lCancelarEdicao");
+  if (cancelBtn) cancelBtn.classList.add("hidden");
+  syncContaLabelLancamento();
 }
 
 // ─── Event Listeners ─────────────────────────────────────────────────────────────
@@ -805,17 +924,27 @@ formLancamento?.addEventListener("submit", async (e) => {
   const btn = document.getElementById("lSubmit");
   btn.disabled = true;
   try {
+    const isEditing = editingId !== null;
     if (tipoMov === "despesa") {
-      await api("/api/despesas", { method: "POST", body: JSON.stringify({ data, valor: Number(valor), descricao, tipo: cat, conta }) });
-      showMainAlert("Despesa salva.", false);
+      const body = JSON.stringify({ data, valor: Number(valor), descricao, tipo: cat, conta });
+      if (isEditing) {
+        await api(`/api/despesas/${editingId}`, { method: "PUT", body });
+        showMainAlert("Despesa atualizada.", false);
+      } else {
+        await api("/api/despesas", { method: "POST", body });
+        showMainAlert("Despesa salva.", false);
+      }
     } else {
-      await api("/api/receitas", { method: "POST", body: JSON.stringify({ data, valor: Number(valor), descricao, categoria: cat, conta }) });
-      showMainAlert("Receita salva.", false);
+      const body = JSON.stringify({ data, valor: Number(valor), descricao, categoria: cat, conta });
+      if (isEditing) {
+        await api(`/api/receitas/${editingId}`, { method: "PUT", body });
+        showMainAlert("Receita atualizada.", false);
+      } else {
+        await api("/api/receitas", { method: "POST", body });
+        showMainAlert("Receita salva.", false);
+      }
     }
-    formLancamento.reset();
-    const ld = document.getElementById("lData");
-    if (ld) ld.value = new Date().toISOString().slice(0, 10);
-    syncContaLabelLancamento();
+    cancelarEdicao();
     await carregarMovimentosMes();
     await preencherSelectsCatalogo();
     carregarDashboard();
@@ -863,6 +992,8 @@ formNovaCategoria?.addEventListener("submit", async (e) => {
 document.querySelectorAll('input[name="lTipo"]').forEach((inp) => {
   inp.addEventListener("change", syncContaLabelLancamento);
 });
+
+document.getElementById("lCancelarEdicao")?.addEventListener("click", cancelarEdicao);
 
 // ─── Validação de senha forte ────────────────────────────────────────────────────
 

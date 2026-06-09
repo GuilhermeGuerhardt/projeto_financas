@@ -350,11 +350,15 @@
                     <option value="">Carregando…</option>
                   </select>
                 </div>
-                <div class="sm:col-span-2">
+                <div class="sm:col-span-2 flex flex-wrap items-center gap-3">
                   <button type="submit" id="lSubmit"
                     class="btn-primary inline-flex items-center justify-center gap-2 rounded-2xl px-8 py-3.5 text-sm font-bold text-white">
                     <i data-lucide="check" class="h-4 w-4"></i>
                     Salvar lançamento
+                  </button>
+                  <button type="button" id="lCancelarEdicao"
+                    class="hidden rounded-2xl border border-slate-200 px-6 py-3.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+                    Cancelar edição
                   </button>
                 </div>
               </form>
