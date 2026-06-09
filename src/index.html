@@ -3,137 +3,553 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Financeiro</title>
+  <title>Finanças — Painel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind = {
-      config: {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              brand: {
-                500: "#10b981",
-                600: "#059669",
-                700: "#047857"
-              }
-            },
-            boxShadow: {
-              soft: "0 10px 30px -15px rgba(0, 0, 0, 0.25)"
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50:  "#eef2ff",
+              100: "#e0e7ff",
+              200: "#c7d2fe",
+              300: "#a5b4fc",
+              400: "#818cf8",
+              500: "#6366f1",
+              600: "#4f46e5",
+              700: "#4338ca",
+              800: "#3730a3",
+              900: "#312e81",
+              950: "#1e1b4b",
             }
+          },
+          boxShadow: {
+            glow:    "0 0 0 1px rgba(99,102,241,0.2), 0 8px 40px -8px rgba(99,102,241,0.5)",
+            "glow-sm": "0 4px 20px -4px rgba(99,102,241,0.4)",
+            glass:   "0 4px 32px -8px rgba(99,102,241,0.18), 0 1px 0 rgba(255,255,255,0.9) inset",
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"]
           }
         }
       }
     };
   </script>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body class="h-full bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-100">
-  <div class="min-h-screen">
+
+  <!-- ═══════════════════════════════════════════════════════ TELA DE AUTH ═══ -->
+  <div id="authView" class="min-h-screen">
+    <div class="auth-bg relative min-h-screen overflow-hidden">
+
+      <!-- Orbs decorativos -->
+      <div class="orb orb-a"></div>
+      <div class="orb orb-b"></div>
+      <div class="orb orb-c"></div>
+
+      <div class="relative mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-4 py-12 sm:px-6 lg:flex-row lg:items-center lg:gap-16 lg:px-8">
+
+        <!-- Lado esquerdo — hero -->
+        <div class="mb-12 max-w-lg fade-up lg:mb-0">
+          <!-- Badge -->
+          <div class="pill-badge mb-6 inline-flex items-center gap-2 rounded-full px-4 py-1.5">
+            <span class="relative flex h-2 w-2">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75"></span>
+              <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-500"></span>
+            </span>
+            <span class="text-xs font-semibold uppercase tracking-widest text-brand-600 dark:text-brand-300">Controle financeiro inteligente</span>
+          </div>
+
+          <!-- Heading -->
+          <h1 class="hero-heading text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl">
+            Organize suas<br>finanças com<br>clareza total.
+          </h1>
+          <p class="mt-5 text-lg leading-relaxed text-slate-500 dark:text-slate-400">
+            Lançamentos, gráficos e relatórios em um painel seguro e moderno.
+          </p>
+
+          <!-- Features -->
+          <ul class="mt-10 space-y-4">
+            <li class="flex items-center gap-4">
+              <span class="feature-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-brand-600 dark:text-brand-400">
+                <i data-lucide="shield-check" class="h-5 w-5"></i>
+              </span>
+              <span class="text-sm font-medium text-slate-600 dark:text-slate-300">Autenticação segura com JWT e senha criptografada</span>
+            </li>
+            <li class="flex items-center gap-4">
+              <span class="feature-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-brand-600 dark:text-brand-400">
+                <i data-lucide="trending-up" class="h-5 w-5"></i>
+              </span>
+              <span class="text-sm font-medium text-slate-600 dark:text-slate-300">Gráficos de evolução mensal e distribuição de gastos</span>
+            </li>
+            <li class="flex items-center gap-4">
+              <span class="feature-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-brand-600 dark:text-brand-400">
+                <i data-lucide="tags" class="h-5 w-5"></i>
+              </span>
+              <span class="text-sm font-medium text-slate-600 dark:text-slate-300">Contas e categorias personalizadas por usuário</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Lado direito — formulário -->
+        <div class="w-full max-w-md fade-up" style="animation-delay:0.1s">
+          <div class="glass-card rounded-3xl p-8">
+
+            <!-- Tabs -->
+            <div class="mb-7 flex rounded-2xl bg-slate-100/80 p-1 dark:bg-slate-800/60">
+              <button type="button" id="showLogin"
+                class="auth-tab flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all">
+                Entrar
+              </button>
+              <button type="button" id="showRegister"
+                class="auth-tab flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all">
+                Cadastrar
+              </button>
+            </div>
+
+            <!-- Alerta -->
+            <div id="authAlert" class="mb-5 hidden rounded-2xl border px-4 py-3 text-sm font-medium"></div>
+
+            <!-- Form: Login -->
+            <form id="loginForm" class="space-y-5">
+              <div>
+                <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white">Bem-vindo de volta 👋</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Entre com seus dados para continuar.</p>
+              </div>
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="loginEmail">E-mail</label>
+                <input id="loginEmail" name="email" type="email" autocomplete="email" required
+                  class="input-field w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/70">
+              </div>
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="loginPassword">Senha</label>
+                <input id="loginPassword" name="password" type="password" autocomplete="current-password" required
+                  class="input-field w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/70">
+              </div>
+              <button type="submit" id="loginSubmit"
+                class="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold text-white">
+                <i data-lucide="log-in" class="h-4 w-4"></i>
+                Entrar na conta
+              </button>
+            </form>
+
+            <!-- Form: Cadastro -->
+            <form id="registerForm" class="hidden space-y-5">
+              <div>
+                <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white">Criar conta ✨</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Preencha os dados para começar.</p>
+              </div>
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="regName">Nome</label>
+                <input id="regName" name="name" type="text" autocomplete="name" required
+                  class="input-field w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/70">
+              </div>
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="regEmail">E-mail</label>
+                <input id="regEmail" name="email" type="email" autocomplete="email" required
+                  class="input-field w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/70">
+              </div>
+              <div>
+                <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="regPassword">Senha</label>
+                <input id="regPassword" name="password" type="password" autocomplete="new-password" required minlength="8"
+                  class="input-field w-full rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/70">
+                <!-- Indicador de força -->
+                <div id="senhaForca" class="mt-3 hidden">
+                  <div class="mb-1.5 flex gap-1.5">
+                    <div id="sfBar1" class="sf-bar"></div>
+                    <div id="sfBar2" class="sf-bar"></div>
+                    <div id="sfBar3" class="sf-bar"></div>
+                    <div id="sfBar4" class="sf-bar"></div>
+                  </div>
+                  <p id="sfLabel" class="text-xs font-semibold"></p>
+                </div>
+                <!-- Requisitos -->
+                <ul class="mt-2.5 space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                  <li id="sfReq8"   class="flex items-center gap-1.5"><span class="sf-dot">·</span> Mínimo de 8 caracteres</li>
+                  <li id="sfReqMai" class="flex items-center gap-1.5"><span class="sf-dot">·</span> Uma letra maiúscula</li>
+                  <li id="sfReqMin" class="flex items-center gap-1.5"><span class="sf-dot">·</span> Uma letra minúscula</li>
+                  <li id="sfReqNum" class="flex items-center gap-1.5"><span class="sf-dot">·</span> Um número</li>
+                  <li id="sfReqEsp" class="flex items-center gap-1.5"><span class="sf-dot">·</span> Um caractere especial (!@#$%...)</li>
+                </ul>
+              </div>
+              <button type="submit" id="registerSubmit"
+                class="btn-primary flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-bold text-white">
+                <i data-lucide="user-plus" class="h-4 w-4"></i>
+                Criar minha conta
+              </button>
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════ APP PRINCIPAL ═══ -->
+  <div id="appView" class="hidden min-h-screen">
     <div class="flex min-h-screen">
+
+      <!-- Sidebar -->
       <aside id="sidebar"
-        class="fixed inset-y-0 left-0 z-40 w-72 -translate-x-full border-r border-slate-200 bg-white/95 px-5 py-6 backdrop-blur transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-900/95 lg:static lg:translate-x-0">
-        <div class="mb-8 flex items-center gap-3">
-          <div class="rounded-xl bg-brand-500/10 p-2 text-brand-600 dark:text-brand-500">
+        class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-r border-slate-200/80 bg-white/95 px-5 py-6 backdrop-blur-xl transition-transform duration-300 ease-out dark:border-slate-800/80 dark:bg-slate-900/95 lg:static lg:translate-x-0">
+
+        <!-- Logo -->
+        <div class="mb-8 flex shrink-0 items-center gap-3">
+          <div class="sidebar-logo-icon flex h-10 w-10 items-center justify-center rounded-2xl text-white">
             <i data-lucide="wallet" class="h-5 w-5"></i>
           </div>
           <div>
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Sistema Financeiro</p>
-            <h1 class="text-lg font-semibold">Front-end Base</h1>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Sistema</p>
+            <h1 class="gradient-text text-lg font-extrabold">Finanças</h1>
           </div>
         </div>
 
-        <nav class="space-y-2">
-          <button data-tab-target="login"
-            class="tab-button active-tab flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800">
-            <i data-lucide="shield-check" class="h-4 w-4"></i> Login
+        <!-- Saudação -->
+        <div class="mb-6 shrink-0 overflow-hidden rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-indigo-50 px-4 py-3 dark:border-brand-800/50 dark:bg-none dark:bg-slate-800">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-300">Logado como</p>
+          <p id="userGreeting" class="mt-0.5 truncate text-sm font-bold text-slate-900 dark:text-white"></p>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex-1 space-y-1">
+          <button type="button" data-tab-target="lancamentos"
+            class="tab-button active-tab flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-all hover:bg-brand-50 dark:hover:bg-brand-950/30">
+            <i data-lucide="plus-circle" class="h-4 w-4"></i> Lançamentos
+          </button>
+          <button type="button" data-tab-target="graficos"
+            class="tab-button flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-all hover:bg-brand-50 dark:hover:bg-brand-950/30">
+            <i data-lucide="line-chart" class="h-4 w-4"></i> Gráficos
+          </button>
+          <button type="button" data-tab-target="relatorio"
+            class="tab-button flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-all hover:bg-brand-50 dark:hover:bg-brand-950/30">
+            <i data-lucide="bar-chart-3" class="h-4 w-4"></i> Relatório
+          </button>
+          <button type="button" data-tab-target="organizacao"
+            class="tab-button flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition-all hover:bg-brand-50 dark:hover:bg-brand-950/30">
+            <i data-lucide="tags" class="h-4 w-4"></i> Organização
           </button>
         </nav>
+
+        <!-- Logout -->
+        <div class="mt-auto border-t border-slate-100 pt-5 dark:border-slate-800">
+          <button type="button" id="logoutBtn"
+            class="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold text-rose-500 transition-all hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">
+            <i data-lucide="log-out" class="h-4 w-4"></i> Sair
+          </button>
+        </div>
       </aside>
 
-      <div class="flex flex-1 flex-col">
-        <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 sm:px-6">
-          <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <button id="menuButton"
-                class="rounded-lg border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 lg:hidden">
+      <!-- Conteúdo principal -->
+      <div class="flex flex-1 flex-col lg:pl-0">
+
+        <!-- Header -->
+        <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 px-4 py-3 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/85 sm:px-6">
+          <div class="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- Menu mobile -->
+              <button type="button" id="menuButton"
+                class="rounded-2xl border border-slate-200 p-2.5 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 lg:hidden">
                 <i data-lucide="menu" class="h-5 w-5"></i>
               </button>
-              <div>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Interface pronta para integração</p>
-                <h2 class="text-base font-semibold sm:text-lg">Autenticação primeiro</h2>
+
+              <!-- Seletor de mês -->
+              <div class="flex flex-col gap-0.5">
+                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Mês de referência</p>
+                <div class="month-strip inline-flex items-center gap-0.5 rounded-2xl bg-white/80 p-1 shadow-sm dark:bg-slate-800/70">
+                  <button type="button" id="mesPrev"
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-brand-50 hover:text-brand-600 dark:text-slate-400 dark:hover:bg-brand-950/40 dark:hover:text-brand-400"
+                    aria-label="Mês anterior">
+                    <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                  </button>
+                  <button type="button" id="mesOpenPicker"
+                    class="flex min-w-[10rem] flex-col items-center justify-center rounded-xl px-3 py-1 text-center transition hover:bg-brand-50/60 dark:hover:bg-brand-950/30">
+                    <span id="mesDisplayShort" class="text-[10px] font-bold uppercase tracking-widest text-brand-500 dark:text-brand-400"></span>
+                    <span id="mesDisplayLong" class="text-sm font-extrabold capitalize text-slate-900 dark:text-white"></span>
+                  </button>
+                  <button type="button" id="mesNext"
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-brand-50 hover:text-brand-600 dark:text-slate-400 dark:hover:bg-brand-950/40 dark:hover:text-brand-400"
+                    aria-label="Próximo mês">
+                    <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                  </button>
+                </div>
+                <input type="month" id="filtroMes" class="sr-only" tabindex="-1" aria-hidden="true">
               </div>
             </div>
-            <button id="themeToggle"
-              class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
-              <i data-lucide="moon-star" class="h-4 w-4"></i>
-              Tema
+
+            <!-- Theme toggle -->
+            <button type="button" id="themeToggle"
+              class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+              <i data-lucide="sun"  id="themeIconLight" class="hidden h-4 w-4 text-amber-400"></i>
+              <i data-lucide="moon" id="themeIconDark"  class="h-4 w-4 text-brand-400"></i>
+              <span id="themeToggleLabel" class="hidden sm:inline">Escuro</span>
             </button>
           </div>
         </header>
 
-        <main class="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6">
-          <section id="login" class="tab-content">
-            <div class="grid min-h-[70vh] place-items-center py-6">
-              <div class="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-7 shadow-soft dark:border-slate-800 dark:bg-slate-900">
-                <div class="mb-5 flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-                  <button type="button" id="showLogin" class="auth-tab flex-1 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white">Entrar</button>
-                  <button type="button" id="showRegister" class="auth-tab flex-1 rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300">Cadastrar</button>
-                </div>
-                <div class="mb-5 flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 dark:border-slate-700">
-                  <span class="text-sm text-slate-600 dark:text-slate-300">Modo Dark / Light</span>
-                  <button id="themeSwitchInline" class="theme-switch relative h-7 w-14 rounded-full bg-slate-300 p-1 transition dark:bg-brand-600">
-                    <span class="theme-dot block h-5 w-5 rounded-full bg-white transition"></span>
-                  </button>
-                </div>
+        <!-- Main -->
+        <main class="mx-auto w-full max-w-5xl flex-1 p-4 sm:p-6">
+          <div id="mainAlert" class="mb-5 hidden rounded-2xl border px-4 py-3 text-sm font-medium"></div>
 
-                <form id="loginForm" class="auth-panel space-y-4">
-                  <h3 class="text-2xl font-semibold">Entrar na conta</h3>
-                  <p class="text-sm text-slate-500 dark:text-slate-400">Sem cadastro no banco, considere login inválido.</p>
-                  <div class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-300">
-                    Status da autenticação será validado no seu backend.
-                  </div>
-                  <div>
-                    <label class="mb-1 block text-sm font-medium">E-mail</label>
-                    <input type="email" placeholder="Digite seu e-mail"
-                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
-                  </div>
-                  <div>
-                    <label class="mb-1 block text-sm font-medium">Senha</label>
-                    <input type="password" placeholder="Digite sua senha"
-                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
-                  </div>
-                  <button type="button"
-                    class="w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 focus:outline-none focus:ring-4 focus:ring-brand-500/40">
-                    Entrar
-                  </button>
-                </form>
+          <!-- ── Tab: Lançamentos ── -->
+          <section id="lancamentos" class="tab-content space-y-6">
 
-                <form id="registerForm" class="auth-panel hidden space-y-4">
-                  <h3 class="text-2xl font-semibold">Criar cadastro</h3>
-                  <p class="text-sm text-slate-500 dark:text-slate-400">Preencha os dados para criar a conta.</p>
-                  <div>
-                    <label class="mb-1 block text-sm font-medium">Nome completo</label>
-                    <input type="text" placeholder="Digite seu nome"
-                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
-                  </div>
-                  <div>
-                    <label class="mb-1 block text-sm font-medium">E-mail</label>
-                    <input type="email" placeholder="Digite seu e-mail"
-                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
-                  </div>
-                  <div>
-                    <label class="mb-1 block text-sm font-medium">Senha</label>
-                    <input type="password" placeholder="Crie uma senha"
-                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none ring-brand-500/40 transition focus:border-brand-500 focus:ring-4 dark:border-slate-700 dark:bg-slate-950">
-                  </div>
-                  <button type="button"
-                    class="w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 focus:outline-none focus:ring-4 focus:ring-brand-500/40">
-                    Cadastrar
-                  </button>
-                </form>
+            <!-- Form de lançamento -->
+            <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
+              <div class="border-b border-slate-100 bg-gradient-to-r from-brand-50 to-indigo-50/60 px-6 py-5 dark:border-slate-700/60 dark:bg-none dark:bg-slate-800/80">
+                <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">Novo lançamento</h2>
+                <p class="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Registre receitas e despesas do mês.</p>
               </div>
+              <form id="formLancamento" class="grid gap-5 p-6 sm:grid-cols-2">
+                <fieldset class="sm:col-span-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-700/60 dark:bg-slate-800/30">
+                  <legend class="px-1 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Tipo <span class="font-normal text-rose-500">(obrigatório)</span></legend>
+                  <div class="mt-3 flex flex-wrap gap-3">
+                    <label class="inline-flex cursor-pointer items-center gap-2.5 rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-sm font-semibold transition-all has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 has-[:checked]:text-brand-800 dark:border-slate-600 dark:bg-slate-900 dark:has-[:checked]:border-brand-400 dark:has-[:checked]:bg-brand-950/50 dark:has-[:checked]:text-brand-200">
+                      <input type="radio" name="lTipo" value="despesa" class="h-4 w-4 text-brand-600 focus:ring-brand-500" required>
+                      <i data-lucide="arrow-down-circle" class="h-4 w-4"></i> Despesa
+                    </label>
+                    <label class="inline-flex cursor-pointer items-center gap-2.5 rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-sm font-semibold transition-all has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-900 dark:border-slate-600 dark:bg-slate-900 dark:has-[:checked]:border-emerald-400 dark:has-[:checked]:bg-emerald-950/40 dark:has-[:checked]:text-emerald-200">
+                      <input type="radio" name="lTipo" value="receita" class="h-4 w-4 text-emerald-600 focus:ring-emerald-500">
+                      <i data-lucide="arrow-up-circle" class="h-4 w-4"></i> Receita
+                    </label>
+                  </div>
+                </fieldset>
+                <div>
+                  <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="lData">Data</label>
+                  <input id="lData" name="data" type="date" required
+                    class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="lValor">Valor (R$)</label>
+                  <input id="lValor" name="valor" type="number" step="0.01" min="0.01" required placeholder="0,00"
+                    class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="lDesc">Descrição <span class="font-normal normal-case text-slate-400">(opcional)</span></label>
+                  <input id="lDesc" name="descricao" type="text" placeholder="Ex.: mercado, salário, freelance"
+                    class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="lCat">Categoria</label>
+                  <select id="lCat" name="categoria" required
+                    class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+                    <option value="">Carregando…</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" for="lConta" id="lContaLabel">Conta</label>
+                  <select id="lConta" name="conta" required
+                    class="input-field w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-950">
+                    <option value="">Carregando…</option>
+                  </select>
+                </div>
+                <div class="sm:col-span-2">
+                  <button type="submit" id="lSubmit"
+                    class="btn-primary inline-flex items-center justify-center gap-2 rounded-2xl px-8 py-3.5 text-sm font-bold text-white">
+                    <i data-lucide="check" class="h-4 w-4"></i>
+                    Salvar lançamento
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Tabela de movimentações -->
+            <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800/80 dark:bg-slate-900">
+              <div class="border-b border-slate-100 px-6 py-5 dark:border-slate-800">
+                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">Movimentação do mês</h2>
+                  <p id="listaMesLabel" class="text-sm font-medium text-brand-500 dark:text-brand-400"></p>
+                </div>
+              </div>
+              <div class="p-6 space-y-6">
+                <div>
+                  <h3 class="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <span class="h-2 w-2 rounded-full bg-rose-500"></span> Despesas
+                  </h3>
+                  <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <table class="w-full min-w-[560px] text-left text-sm">
+                      <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-400 dark:bg-slate-800/60 dark:text-slate-500">
+                        <tr>
+                          <th class="px-4 py-3">Data</th>
+                          <th class="px-4 py-3">Descrição</th>
+                          <th class="px-4 py-3">Categoria</th>
+                          <th class="px-4 py-3">Conta</th>
+                          <th class="px-4 py-3 text-right">Valor</th>
+                          <th class="w-12 px-2 py-3"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="tabelaDespesas" class="divide-y divide-slate-50 dark:divide-slate-800/60"></tbody>
+                    </table>
+                  </div>
+                  <p id="listaVaziaDesp" class="hidden py-6 text-center text-sm text-slate-400 dark:text-slate-500">Nenhuma despesa neste mês.</p>
+                </div>
+
+                <div>
+                  <h3 class="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Receitas
+                  </h3>
+                  <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <table class="w-full min-w-[560px] text-left text-sm">
+                      <thead class="bg-emerald-50/80 text-xs font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400">
+                        <tr>
+                          <th class="px-4 py-3">Data</th>
+                          <th class="px-4 py-3">Descrição</th>
+                          <th class="px-4 py-3">Categoria</th>
+                          <th class="px-4 py-3">Conta</th>
+                          <th class="px-4 py-3 text-right">Valor</th>
+                          <th class="w-12 px-2 py-3"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="tabelaReceitas" class="divide-y divide-slate-50 dark:divide-slate-800/60"></tbody>
+                    </table>
+                  </div>
+                  <p id="listaVaziaRec" class="hidden py-6 text-center text-sm text-slate-400 dark:text-slate-500">Nenhuma receita neste mês.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ── Tab: Gráficos ── -->
+          <section id="graficos" class="tab-content hidden space-y-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 class="gradient-text text-2xl font-extrabold">Visão analítica</h2>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Totais do ano, categorias e evolução mensal.</p>
+              </div>
+              <div>
+                <label class="mb-1 block text-[10px] font-bold uppercase tracking-widest text-slate-400" for="dashAno">Ano</label>
+                <select id="dashAno" class="input-field rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold dark:border-slate-700 dark:bg-slate-900"></select>
+              </div>
+            </div>
+
+            <!-- KPI cards -->
+            <div class="grid gap-4 sm:grid-cols-3">
+              <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-500 to-rose-700 p-6 text-white shadow-glow-sm">
+                <div class="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10"></div>
+                <p class="text-xs font-bold uppercase tracking-widest text-white/70">Total gasto (ano)</p>
+                <p id="dashTotalGasto" class="mt-3 text-3xl font-extrabold">R$ 0,00</p>
+                <i data-lucide="trending-down" class="absolute bottom-5 right-5 h-8 w-8 text-white/20"></i>
+              </div>
+              <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 text-white shadow-glow-sm">
+                <div class="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10"></div>
+                <p class="text-xs font-bold uppercase tracking-widest text-white/70">Total receita (ano)</p>
+                <p id="dashTotalReceita" class="mt-3 text-3xl font-extrabold">R$ 0,00</p>
+                <i data-lucide="trending-up" class="absolute bottom-5 right-5 h-8 w-8 text-white/20"></i>
+              </div>
+              <div class="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-brand-500/5"></div>
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Saldo (receita − gasto)</p>
+                <p id="dashSaldo" class="mt-3 text-3xl font-extrabold text-slate-900 dark:text-white">R$ 0,00</p>
+                <i data-lucide="wallet" class="absolute bottom-5 right-5 h-8 w-8 text-slate-200 dark:text-slate-700"></i>
+              </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid gap-6 lg:grid-cols-2">
+              <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <h3 class="mb-1 text-sm font-extrabold text-slate-900 dark:text-white">Gastos por categoria</h3>
+                <p class="mb-4 text-xs text-slate-400 dark:text-slate-500">Distribuição do ano selecionado</p>
+                <div class="relative mx-auto h-64 max-w-xs">
+                  <canvas id="chartCategorias"></canvas>
+                </div>
+              </div>
+              <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <h3 class="mb-1 text-sm font-extrabold text-slate-900 dark:text-white">Evolução mensal</h3>
+                <p class="mb-4 text-xs text-slate-400 dark:text-slate-500">Gastos vs. receitas mês a mês</p>
+                <div class="relative h-64 w-full">
+                  <canvas id="chartLinha"></canvas>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ── Tab: Relatório ── -->
+          <section id="relatorio" class="tab-content hidden space-y-6">
+            <h2 class="gradient-text text-2xl font-extrabold">Relatório mensal</h2>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-indigo-700 p-6 text-white shadow-glow">
+                <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10"></div>
+                <p class="text-xs font-bold uppercase tracking-widest text-white/70">Despesas no mês</p>
+                <p id="relTotal" class="mt-3 text-4xl font-extrabold">R$ 0,00</p>
+                <p id="relMesTitulo" class="mt-2 text-sm capitalize text-white/60"></p>
+              </div>
+              <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-700 p-6 text-white shadow-glow-sm">
+                <div class="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10"></div>
+                <p class="text-xs font-bold uppercase tracking-widest text-white/70">Receitas no mês</p>
+                <p id="relTotalReceita" class="mt-3 text-4xl font-extrabold">R$ 0,00</p>
+                <p id="relMesTituloRec" class="mt-2 text-sm capitalize text-white/60"></p>
+              </div>
+            </div>
+            <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <h3 class="mb-5 flex items-center gap-2 font-extrabold text-slate-900 dark:text-white">
+                <i data-lucide="pie-chart" class="h-4 w-4 text-brand-500"></i>
+                Despesas por categoria
+              </h3>
+              <ul id="relPorTipo" class="space-y-4 text-sm"></ul>
+            </div>
+          </section>
+
+          <!-- ── Tab: Organização ── -->
+          <section id="organizacao" class="tab-content hidden space-y-6">
+            <div>
+              <h2 class="gradient-text text-2xl font-extrabold">Organização</h2>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Contas e categorias usadas nos lançamentos.</p>
+            </div>
+            <div class="grid gap-6 lg:grid-cols-2">
+
+              <!-- Contas -->
+              <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="border-b border-slate-100 bg-gradient-to-r from-brand-50 to-indigo-50/40 px-6 py-5 dark:border-slate-700/60 dark:bg-none dark:bg-slate-800/80">
+                  <h3 class="font-extrabold text-slate-900 dark:text-white">Contas</h3>
+                </div>
+                <div class="p-6">
+                  <form id="formNovaConta" class="mb-5 flex flex-wrap items-center gap-3">
+                    <input id="novaContaNome" type="text" placeholder="Nome da conta" required
+                      class="input-field min-w-[10rem] flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-950">
+                    <div class="flex shrink-0 flex-col items-center gap-0.5">
+                      <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400">Cor</span>
+                      <div class="rainbow-wheel relative h-10 w-10" data-wheel>
+                        <button type="button" class="rainbow-wheel-ring absolute inset-0 rounded-full shadow ring-2 ring-white dark:ring-slate-800" aria-label="Escolher cor"></button>
+                        <span class="rainbow-wheel-core pointer-events-none absolute left-1/2 top-1/2 z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow dark:border-slate-900" style="background:#6366f1"></span>
+                        <input type="hidden" id="novaContaCor" value="#6366f1">
+                      </div>
+                    </div>
+                    <button type="submit" class="btn-primary shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold text-white">Adicionar</button>
+                  </form>
+                  <ul id="listaContas" class="divide-y divide-slate-50 dark:divide-slate-800/60"></ul>
+                </div>
+              </div>
+
+              <!-- Categorias -->
+              <div class="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-50/40 px-6 py-5 dark:border-slate-700/60 dark:bg-none dark:bg-slate-800/80">
+                  <h3 class="font-extrabold text-slate-900 dark:text-white">Categorias</h3>
+                </div>
+                <div class="p-6">
+                  <form id="formNovaCategoria" class="mb-5 flex flex-wrap items-center gap-3">
+                    <input id="novaCatNome" type="text" placeholder="Nome da categoria" required
+                      class="input-field min-w-[10rem] flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm dark:border-slate-700 dark:bg-slate-950">
+                    <div class="flex shrink-0 flex-col items-center gap-0.5">
+                      <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400">Cor</span>
+                      <div class="rainbow-wheel relative h-10 w-10" data-wheel>
+                        <button type="button" class="rainbow-wheel-ring absolute inset-0 rounded-full shadow ring-2 ring-white dark:ring-slate-800" aria-label="Escolher cor"></button>
+                        <span class="rainbow-wheel-core pointer-events-none absolute left-1/2 top-1/2 z-10 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow dark:border-slate-900" style="background:#a855f7"></span>
+                        <input type="hidden" id="novaCatCor" value="#a855f7">
+                      </div>
+                    </div>
+                    <button type="submit" class="btn-primary shrink-0 rounded-2xl px-5 py-2.5 text-sm font-bold text-white">Adicionar</button>
+                  </form>
+                  <ul id="listaCategorias" class="divide-y divide-slate-50 dark:divide-slate-800/60"></ul>
+                </div>
+              </div>
+
             </div>
           </section>
         </main>
