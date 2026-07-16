@@ -1,3 +1,7 @@
 node_modules/
 .env
 data/
+
+# CSS compilado pelo Tailwind — gerado por `npm run build:css` a partir de
+# styles/input.css. No Render, o build command regenera este arquivo.
+src/assets/
