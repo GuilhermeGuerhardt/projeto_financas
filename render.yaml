@@ -1,0 +1,41 @@
+# Blueprint do Render. No painel: New -> Blueprint -> aponte para este repositório.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: projeto-financas
+    runtime: node
+    plan: free
+    # O Render não tem região na América do Sul; Virginia é a mais próxima do
+    # Brasil. O banco fica no Supabase em São Paulo (sa-east-1), então cada query
+    # atravessa o continente (~120ms). Foi uma escolha consciente: se o painel
+    # ficar lento, mover o banco para uma região us-east é o primeiro ajuste.
+    region: virginia
+
+    # O build:css é obrigatório: src/assets/app.css é gerado e não vai para o git.
+    # Sem ele o site sobe sem nenhum estilo.
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+
+    # O servidor sobe antes de conectar no banco, então este endpoint responde
+    # mesmo com o Postgres acordando (ver server.js).
+    healthCheckPath: /api/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # sync: false -> o Render pede o valor no painel e não o guarda no git.
+      # Cole aqui a string do SESSION POOLER do Supabase (porta 5432).
+      # Ver .env.example para o motivo de não usar a conexão direta.
+      - key: DATABASE_URL
+        sync: false
+
+      # O Render gera um segredo aleatório na criação do serviço.
+      # Não precisa inventar nem colar nada.
+      - key: JWT_SECRET
+        generateValue: true
+
+      # Vazio = mesma origem (o Express serve o front). Só preencha se um
+      # front hospedado em outro domínio for consumir esta API.
+      - key: CORS_ORIGIN
+        sync: false
